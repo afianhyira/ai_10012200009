@@ -1,51 +1,36 @@
-# CS4241 Custom RAG Chatbot
-**Student Name:** [Your Name Here]
-**Index Number:** 10012200009
+# CS4241: Introduction to AI - Final Project (2026)
+**Project Title:** The Civic Scribe - Executive RAG Dashboard  
+**Author:** [Your Name / Index Number]
 
-## Overview
-This project is a custom Retrieval-Augmented Generation (RAG) chatbot developed from scratch for Academic City. It answers questions based on two specific datasets:
-1. Ghana Election Results (CSV)
-2. 2025 Ghana Budget Statement (PDF)
+## 1. Project Overview
+The Civic Scribe is a professional-grade RAG application designed to assist the Executive Branch of the Republic of Ghana in analyzing national archives, specifically the 2025 Budget Statement and historical Election Results.
 
-As per the exam requirements, this project does **not** use LangChain, LlamaIndex, or any prebuilt end-to-end RAG framework. All components—from document ingestion and chunking to vector storage, hybrid retrieval, and prompt construction—have been implemented manually.
+## 2. Key Features
+- **Custom Hybrid RAG Pipeline:** Built from scratch without LangChain/LlamaIndex.
+- **Hybrid Retrieval:** Combines FAISS (Vector) and BM25 (Keyword) with RRF re-ranking.
+- **Executive UI:** Premium Streamlit dashboard with Light/Dark mode and evidentiary annex.
+- **Persona-Driven Generation:** Strict "Executive Scribe" persona for formal reporting.
 
-## Technology Stack
-- **Python** & **Streamlit** (UI)
-- **pandas** (CSV processing)
-- **PyMuPDF** (PDF processing)
-- **sentence-transformers** (Embeddings)
-- **FAISS** (Vector Store)
-- **NumPy** & **scikit-learn** (Math & Utilities)
-- **rank-bm25** (Keyword Search)
-- **OpenAI API** (LLM Generation)
+## 3. Repository Structure
+- `app.py`: Main Streamlit application.
+- `src/`: Core logic (Ingestion, Retrieval, Generation, Pipeline).
+- `data/`: Source datasets (2025 Budget PDF, 2020 Election CSV).
+- `docs/`: Full documentation for Exam Submission (Architecture, Experiments, Tests).
+- `requirements.txt`: Project dependencies.
 
-## Architecture Summary
-1. **Ingestion & Preprocessing**: Extracts text from CSV and PDF files. The PDF uses both fixed-size and paragraph-aware chunking.
-2. **Embedding & Storage**: Chunks are embedded using `sentence-transformers` and stored in a manual FAISS index.
-3. **Retrieval**: Uses a **Hybrid Retrieval** approach combining FAISS vector search and BM25 keyword search.
-4. **Innovation Feature**: A domain-specific scoring function that merges vector and BM25 scores, and applies bonuses based on source matching, keyword overlap, and numeric presence.
-5. **Generation**: Context is injected into handcrafted prompts (including hallucination-control templates) and sent to OpenAI.
+## 4. Documentation (Rubric Coverage)
+- **Architecture Diagram:** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- **Manual Experiment Logs:** [docs/EXPERIMENT_LOGS.md](docs/EXPERIMENT_LOGS.md)
+- **Adversarial Testing:** [docs/ADVERSARIAL_TESTS.md](docs/ADVERSARIAL_TESTS.md)
+- **Data Engineering Justification:** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#4-design-justification)
 
-## Setup & Run Locally
-1. Clone the repository or navigate to this folder.
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. Set your environment variables:
-   - Copy `.env.example` to `.env`
-   - Add your `GROQ_API_KEY`
-4. Place the datasets in the `data/` folder:
-   - `Ghana_Election_Result.csv`
-   - `2025_Budget_Statement.pdf`
-5. Run the Streamlit application:
-   ```bash
-   streamlit run app.py
-   ```
+## 5. Local Setup
+1. Clone the repository.
+2. Install dependencies: `pip install -r requirements.txt`
+3. Add your `GROQ_API_KEY` to a `.env` file.
+4. Run the app: `streamlit run app.py`
 
-## Evaluation
-Run the evaluation script to test accuracy, hallucination, and compare RAG against a pure LLM approach:
-```bash
-python src/evaluation/run_evaluation.py
-```
-Check `outputs/evaluation_results.json` for the output.
+## 6. Submission Links
+- **GitHub Repository:** [Insert your Link here]
+- **Deployed URL:** [Insert your URL here]
+- **Video Walkthrough:** [Insert your Link here]

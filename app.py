@@ -1,428 +1,313 @@
 import streamlit as st
 import os
 import time
+import json
+from datetime import datetime
 from src.pipeline.rag_pipeline import RAGPipeline
 
-# Must be the first Streamlit command
-st.set_page_config(page_title="THE CIVIC SCRIBE", page_icon="🇬🇭", layout="wide")
+# --- 1. PAGE CONFIGURATION ---
+st.set_page_config(page_title="The Civic Scribe | Executive Archive", layout="wide")
 
-# Custom CSS for Oman Ledger Overhaul
-st.markdown("""
+# --- 2. THEME STATE ---
+if "theme" not in st.session_state:
+    st.session_state.theme = "Light"
+
+# --- 3. DYNAMIC DESIGN SYSTEM ---
+primary_green = "#107C41"
+gold_accent = "#FCD116" 
+
+if st.session_state.theme == "Light":
+    bg_color = "#F8F9FA"
+    card_bg = "#FFFFFF"
+    text_color = "#1F2937"
+    border_color = "#E5E7EB"
+    status_bg = "#E8EDF2"
+else:
+    bg_color = "#0F172A"
+    card_bg = "#1E293B"
+    text_color = "#F1F5F9"
+    border_color = "#334155"
+    status_bg = "#1E293B"
+
+custom_css = f"""
 <style>
-/* ==========================================================================
-   1. IMPORTS & VARIABLES
-   ========================================================================== */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap');
+/* Global Reset */
+.stApp {{
+    background-color: {bg_color};
+    color: {text_color};
+}}
 
-:root {
-    /* Color Palette */
-    --color-forest-green: #0B6623;
-    --color-forest-green-hover: #084D1A;
-    --color-gold: #FCD116;
-    --color-cream: #FDFBF7;
-    --color-charcoal: #333333;
-    --color-grey-border: #E5E7EB;
-    --color-grey-text: #4B5563;
-    --color-white: #FFFFFF;
-    
-    /* New: Info & Log Colors */
-    --color-info-bg: #E0E7FF;
-    --color-info-text: #1E3A8A;
-
-    /* Typography */
-    --font-primary: 'Inter', sans-serif;
-    --font-secondary: 'Merriweather', serif;
-    
-    /* Structural & Effects */
-    --transition-speed: 0.25s;
-    --border-radius: 6px;
-    --shadow-soft: 0 4px 15px rgba(0, 0, 0, 0.05);
-}
-
-/* ==========================================================================
-   2. STREAMLIT RESETS & GLOBAL STYLES
-   ========================================================================== */
-header, 
-#MainMenu, 
-footer {
-    visibility: hidden;
-    display: none;
-}
-
-.stApp {
-    background-color: var(--color-cream);
-    color: var(--color-charcoal);
-    font-family: var(--font-primary);
-    -webkit-font-smoothing: antialiased;
-}
-
-h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-secondary);
-    color: var(--color-forest-green) !important;
-}
-
-/* ==========================================================================
-   3. LAYOUT & CONTAINERS
-   ========================================================================== */
-/* Custom Top Bar */
-.top-bar-container {
-    background-color: var(--color-forest-green);
-    border-bottom: 4px solid var(--color-gold);
-    padding: 1.5rem 2.5rem;
-    margin: -4rem -3rem 2rem -3rem; 
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+/* Top Bar Container (Full Width) */
+.top-bar-container {{
+    background-color: {primary_green}; 
+    padding: 20px 40px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-}
-
-.coat-of-arms {
-    height: 70px; /* Adjust height to match the top bar */
-    width: auto;
-}
-
-.top-bar-title {
-    font-family: var(--font-secondary);
-    color: var(--color-white) !important;
-    font-size: clamp(1.4rem, 4vw, 1.75rem); 
-    font-weight: 700;
+    border-bottom: 5px solid #D4AF37; 
+    margin: -6rem -5rem 2.5rem -5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    position: relative;
+    height: 100px;
+}}
+.top-bar-title {{
+    color: white !important;
     margin: 0;
-}
+    font-family: 'Georgia', serif; 
+    font-size: 2.2rem;
+    font-weight: 500;
+    flex-grow: 1;
+    text-align: center;
+}}
+.coat-of-arms {{
+    height: 60px;
+}}
 
-/* Unified Card Layout for Both Columns
-   Targets Streamlit's native columns to act as clean, matching cards
-*/
-[data-testid="column"] {
-    background-color: var(--color-white) !important;
-    border-top: 4px solid var(--color-forest-green) !important;
-    border-radius: var(--border-radius) !important;
-    padding: 1.5rem !important;
-    box-shadow: var(--shadow-soft) !important;
-    /* This removes the massive empty space below the elements */
-    height: fit-content !important; 
-    margin-bottom: 1rem;
-}
+/* Toggle Positioning (Inside Green Banner) */
+.toggle-wrapper {{
+    position: absolute;
+    left: 40px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 100;
+}}
 
-/* Fix the double line under headers in the columns */
-[data-testid="column"] h2, 
-[data-testid="column"] h3 {
-    border-bottom: 2px solid var(--color-forest-green) !important;
-    padding-bottom: 0.5rem;
-    margin-bottom: 1.5rem;
-}
-/* Hide Streamlit's native horizontal rule that causes the double line */
-[data-testid="column"] hr {
-    display: none !important;
-}
-
-/* ==========================================================================
-   4. COMPONENTS (Inputs & Buttons)
-   ========================================================================== */
-/* Input Area Formatting */
-.stTextInput input {
-    background-color: var(--color-white) !important;
-    color: var(--color-charcoal) !important;
-    border: 1px solid #CCCCCC !important;
-    border-radius: var(--border-radius) !important;
-    font-family: var(--font-primary);
-    font-size: 1rem;
-    padding: 0.85rem 1rem;
-    transition: box-shadow var(--transition-speed) ease;
-}
-
-.stTextInput input:focus {
-    box-shadow: 0 0 0 3px rgba(252, 209, 22, 0.3) !important;
-    border-color: var(--color-gold) !important;
-    outline: none !important;
-}
-
-/* Executive Directive Button */
-.stButton, 
-div[data-testid="stButton"] {
-    width: 100% !important;
-    display: block !important;
-}
-
-.stButton button {
-    width: 100% !important; /* Stretches horizontally */
-    white-space: nowrap !important; /* Strictly prevents text clipping or wrapping */
-    background-color: var(--color-forest-green, #0B6623) !important;
-    color: var(--color-white, #FFFFFF) !important;
-    border: none !important;
-    border-radius: var(--border-radius, 6px) !important;
-    font-family: var(--font-primary, 'Inter', sans-serif) !important;
+/* Streamlit Toggle Overrides */
+div[data-testid="stWidgetLabel"] p {{
+    color: white !important;
     font-weight: 600 !important;
-    padding: 0.75rem 1.75rem !important;
-    box-shadow: 0 2px 4px rgba(11, 102, 35, 0.2) !important;
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-    transition: all 0.25s ease !important;
-}
+    font-size: 0.9rem !important;
+    margin-bottom: 0 !important;
+}}
 
-.stButton button:hover {
-    background-color: var(--color-forest-green-hover, #084D1A) !important;
-    color: var(--color-gold, #FCD116) !important;
-    transform: translateY(-2px) !important;
-    box-shadow: 0 4px 8px rgba(11, 102, 35, 0.3) !important;
-}
+/* Headers */
+h3, h4, .executive-heading {{
+    color: {primary_green} !important;
+    font-family: 'Georgia', serif !important;
+    margin-bottom: 1rem !important;
+    font-weight: 600 !important;
+}}
+h3 {{ font-size: 1.6rem !important; }}
+h4 {{ font-size: 1.3rem !important; }}
 
-/* ==========================================================================
-   5. NEW: EVIDENTIARY ANNEX LOG UI
-   ========================================================================== */
-.info-box {
-    background-color: var(--color-info-bg);
-    color: var(--color-info-text);
-    padding: 1rem;
-    border-radius: var(--border-radius);
-    font-size: 0.9rem;
-    font-family: var(--font-primary);
+/* Cards */
+.executive-card {{
+    background-color: {card_bg};
+    border-radius: 8px;
+    padding: 1.5rem;
+    border-top: 4px solid {primary_green};
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     margin-bottom: 1.5rem;
-}
+}}
 
-.log-container {
-    border: 1px solid var(--color-grey-border);
-    border-radius: var(--border-radius);
-    background-color: var(--color-white);
-    display: flex;
-    flex-direction: column;
-}
+/* Annex Specific Header */
+.annex-title {{
+    color: {primary_green} !important;
+    font-family: 'Georgia', serif !important;
+    font-size: 1.8rem !important;
+    margin-bottom: 0.5rem !important;
+    border-bottom: 2px solid {primary_green} !important;
+    padding-bottom: 5px;
+}}
 
-.log-entry {
-    padding: 0.85rem 1rem;
-    border-bottom: 1px solid var(--color-grey-border);
-    font-size: 0.85rem;
-    color: var(--color-charcoal);
-    font-family: var(--font-primary);
-    display: flex;
-    align-items: center;
-}
+/* System Status Box */
+.status-box {{
+    background-color: {status_bg};
+    padding: 18px;
+    border-radius: 6px;
+    margin-bottom: 1.5rem;
+}}
+.status-label {{
+    color: #D32F2F;
+    font-weight: bold;
+    font-size: 1.1rem;
+    display: block;
+    margin-bottom: 4px;
+}}
+.status-text {{
+    color: #1E3A8A;
+    font-size: 1rem;
+}}
 
-.log-entry:last-child {
-    border-bottom: none;
-}
+/* ARCHIVE CARDS */
+.archive-card {{
+    background-color: {card_bg};
+    border-left: 6px solid {primary_green};
+    padding: 1rem;
+    border-radius: 2px;
+    margin-bottom: 0.5rem;
+    color: {text_color};
+}}
+.archive-doc-num {{
+    color: {primary_green};
+    font-weight: bold;
+    font-size: 1.1rem;
+    display: block;
+    margin-bottom: 2px;
+}}
+.archive-source-name {{
+    color: {primary_green};
+    font-weight: bold;
+    font-size: 1.05rem;
+}}
+.score-badge {{
+    background-color: #FFD700;
+    color: #000;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: bold;
+}}
 
-/* New: Professional Status Indicators */
-.status-dot {
-    height: 8px;
-    width: 8px;
-    border-radius: 50%;
-    display: inline-block;
-    margin-right: 10px;
-}
-.dot-green { background-color: #10B981; } /* Success/Ready */
-.dot-yellow { background-color: #F59E0B; } /* Processing/Loading */
-.dot-blue { background-color: #3B82F6; } /* Information */
+/* BUTTONS */
+div[data-testid="stButton"] button {{
+    background-color: {primary_green} !important;
+    color: white !important;
+    border: 1px solid transparent !important;
+    border-radius: 4px !important;
+    font-weight: 600 !important;
+    transition: all 0.3s ease !important;
+}}
+div[data-testid="stButton"] button:hover {{
+    color: #D4AF37 !important;
+    border: 1px solid #D4AF37 !important;
+}}
 
-/* ==========================================================================
-   6. RESPONSIVE DESIGN (MOBILE)
-   ========================================================================== */
-@media screen and (max-width: 768px) {
-    .top-bar-container {
-        padding: 1.25rem;
-        margin: -3rem -1.25rem 1.5rem -1.25rem; 
-    }
-    
-    [data-testid="column"] {
-        margin-top: 1rem;
-    }
-}
+#MainMenu, footer, header {{visibility: hidden;}}
 </style>
-""", unsafe_allow_html=True)
+"""
+st.markdown(custom_css, unsafe_allow_html=True)
 
-top_bar_html = """
+# --- 4. TOP BANNER (Edge-to-Edge) ---
+# We use a trick to place the toggle visually inside the banner
+t_col, _ = st.columns([1, 9]) # Placeholder for the toggle
+with t_col:
+    # Use a container to offset the toggle into the banner area
+    st.markdown('<div style="margin-top: -3.5rem; position: relative; z-index: 999;">', unsafe_allow_html=True)
+    mode = st.toggle("Dark Mode", value=(st.session_state.theme == "Dark"))
+    st.markdown('</div>', unsafe_allow_html=True)
+    if mode != (st.session_state.theme == "Dark"):
+        st.session_state.theme = "Dark" if mode else "Light"
+        st.rerun()
+
+st.markdown(f"""
 <div class="top-bar-container">
     <h1 class="top-bar-title">THE CIVIC SCRIBE | Executive Archive</h1>
-    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Coat_of_arms_of_Ghana.svg/500px-Coat_of_arms_of_Ghana.svg.png" class="coat-of-arms" alt="Ghana Coat of Arms">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Coat_of_arms_of_Ghana.svg/500px-Coat_of_arms_of_Ghana.svg.png" class="coat-of-arms">
 </div>
-"""
+""", unsafe_allow_html=True)
 
-st.markdown(top_bar_html, unsafe_allow_html=True)
-
-# Initialize Pipeline Cache (V4 - Final Sync)
+# Initialize Pipeline
 @st.cache_resource
 def get_pipeline_v4():
-    pipeline = RAGPipeline(data_dir="data")
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    data_dir = os.path.join(base_dir, "data")
+    pipeline = RAGPipeline(data_dir=data_dir)
     pipeline.initialize(pdf_chunking_strategy="paragraph")
     return pipeline
 
-# State Management for Single Briefing
-if "active_briefing" not in st.session_state:
-    st.session_state.active_briefing = None
-if "telemetry" not in st.session_state:
-    st.session_state.telemetry = None
-if "chat_history" not in st.session_state:
-    st.session_state.chat_history = []
+# Initialize Session State
+if "active_briefing" not in st.session_state: st.session_state.active_briefing = None
+if "telemetry" not in st.session_state: st.session_state.telemetry = None
+if "chat_history" not in st.session_state: st.session_state.chat_history = []
+if "suggestion_text" not in st.session_state: st.session_state.suggestion_text = ""
 
-# Initialize Pipeline Behind the Scenes
 pipeline = get_pipeline_v4()
-if not pipeline.is_initialized:
-    st.error("⚠️ Failed to initialize the pipeline. Please ensure the data files are in the `data/` directory.")
-    st.stop()
 
-# Layout: 65% Left, 35% Right
-left_pane, right_pane = st.columns([6.5, 3.5], gap="large")
+# --- 5. MAIN CONTENT ---
+col1, col2 = st.columns([2.5, 1], gap="large")
 
-# ==============================
-# LEFT PANE: The Briefing Area
-# ==============================
-with left_pane:
-    
-    with st.form("query_form"):
-        st.markdown("<h4 style='margin-bottom: 0px;'>Enter Inquiry Directive...</h4>", unsafe_allow_html=True)
-        query = st.text_input("Hidden Label", label_visibility="collapsed", placeholder=" Ask me about the 2025 Budget and Ghana Election...")
-        
-        # This button now spans the full width of the form container
-        submit = st.form_submit_button("Process Executive Directive", use_container_width=True)
+with col1:
+    header_col, _ = st.columns([1, 1])
+    with header_col:
+        st.markdown("### Enter Inquiry Directive...")
 
-    # NEW: Clear Session / New Chat Option
-    if st.button(" New Directive ", use_container_width=True, help="Clears all conversation history and resets the dashboard."):
-        st.session_state.chat_history = []
-        st.session_state.active_briefing = None
-        st.session_state.telemetry = None
-        st.rerun()
-
-    # Processing Logic
-    if submit and query:
-        if not query.strip():
-            st.warning("Please enter a valid directive.")
-        else:
-            with st.spinner("Compiling Executive Briefing..."):
-                # Create a placeholder in the right pane for the live trace
-                with right_pane:
-                    trace_placeholder = st.empty()
-                    
-                    def update_trace(logs):
-                        log_html = "<div class='log-container'>"
-                        for l in logs:
-                            log_html += f"<div class='log-entry'><span class='status-dot {l['dot']}'></span> <strong>{l['time']}:</strong> {l['msg']}</div>"
-                        log_html += "</div>"
-                        trace_placeholder.markdown(log_html, unsafe_allow_html=True)
-
-                    current_logs = []
-                    now = time.strftime("%I:%M %p")
-                    
-                    # Step 1: Connection
-                    current_logs.append({"dot": "dot-green", "time": now, "msg": "Secure server connection established."})
-                    update_trace(current_logs)
-                    time.sleep(0.6)
-                    
-                    # Step 2: Parsing
-                    current_logs.append({"dot": "dot-blue", "time": now, "msg": "Parsing directive for key civic parameters..."})
-                    update_trace(current_logs)
-                    
-                    # Step 3: Run Actual Pipeline (Streaming)
-                    start_time = time.time()
-                    chunks, scores, final_prompt, stream_gen = pipeline.query_stream(
-                        query, 
-                        top_k=4, 
-                        chat_history=st.session_state.chat_history
-                    )
-                    end_time = time.time()
-                    
-                    # Step 4: Scan (Simulated after query is fast)
-                    current_logs.append({"dot": "dot-yellow", "time": now, "msg": "Scanning national electoral archives..."})
-                    update_trace(current_logs)
-                    time.sleep(0.5)
-                    
-                    # Step 5: Success
-                    count = len(chunks)
-                    current_logs.append({"dot": "dot-green", "time": now, "msg": f"{count} relevant archive(s) retrieved successfully."})
-                    update_trace(current_logs)
-
-            # --- Generation & Display (Streaming) ---
-            st.markdown("## Briefing Report")
-            st.caption(f"**Directive:** {query}")
+    st.markdown('<div class="executive-card">', unsafe_allow_html=True)
+    sug_col1, sug_col2, sug_col3 = st.columns(3)
+    with sug_col1:
+        if st.button("📄 2025 Education Budget", use_container_width=True):
+            st.session_state.suggestion_text = "Summarize the 2025 education budget."
+            st.rerun()
+    with sug_col2:
+        if st.button("🇬🇭 2020 Election Results", use_container_width=True):
+            st.session_state.suggestion_text = "Show 2020 election results by region."
+            st.rerun()
+    with sug_col3:
+        if st.button("⚙️ Infrastructure Projects", use_container_width=True):
+            st.session_state.suggestion_text = "Key 2025 infrastructure projects."
+            st.rerun()
             
-            # Display the streaming response
-            full_response = st.write_stream(stream_gen)
-                
-            # Update Session State
-            st.session_state.active_briefing = {
-                "query": query,
-                "response": full_response
-            }
-            # Append to history
+    query = st.text_input("Directive", value=st.session_state.suggestion_text, placeholder="Ask me anything", label_visibility="collapsed")
+    
+    if st.button("Process Executive Directive", use_container_width=True):
+        if query:
+            with st.status("Fetching Executive Data...", expanded=True) as status:
+                now = datetime.now().strftime("%I:%M %p")
+                current_logs = [{"dot": "#10B981", "time": now, "msg": "Secure server connection established."}]
+                chunks, scores, final_prompt, stream_gen = pipeline.query_stream(query, top_k=4, chat_history=st.session_state.chat_history)
+                current_logs.append({"dot": "#3B82F6", "time": now, "msg": "Scanning national archives..."})
+                full_response = st.write_stream(stream_gen)
+                status.update(label="Inquiry Processed", state="complete", expanded=False)
+
+            st.session_state.active_briefing = {"query": query, "response": full_response}
             st.session_state.chat_history.append({"role": "user", "content": query})
             st.session_state.chat_history.append({"role": "assistant", "content": full_response})
-            
-            st.session_state.telemetry = {
-                "chunks": chunks,
-                "scores": scores,
-                "prompt": final_prompt,
-                "time": f"{end_time - start_time:.2f}s",
-                "trace_logs": current_logs
-            }
-            # Rerun to ensure state is cleanly synced
+            st.session_state.telemetry = {"chunks": chunks, "scores": scores, "prompt": final_prompt, "trace_logs": current_logs}
             st.rerun()
 
-    # Display Active Briefing (Persisted)
+    nd_col1, _ = st.columns([0.8, 3])
+    with nd_col1:
+        if st.button("New Directive", use_container_width=True):
+            st.session_state.suggestion_text = ""
+            st.session_state.chat_history = []
+            st.session_state.active_briefing = None
+            st.session_state.telemetry = None
+            st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
+
     if st.session_state.active_briefing:
+        st.markdown('<div class="executive-card">', unsafe_allow_html=True)
         st.markdown("## Latest Briefing Report")
-        st.caption(f"**Directive:** {st.session_state.active_briefing['query']}")
         st.markdown(st.session_state.active_briefing['response'])
-        st.markdown("---")
+        st.markdown('</div>', unsafe_allow_html=True)
 
-    # Display Conversation History
-    if st.session_state.chat_history:
-        with st.expander("View Full Briefing History", expanded=False):
-            # Show history in reverse order (newest first)
-            for msg in reversed(st.session_state.chat_history[:-2]): # Skip the latest one shown above
-                role_label = "EXECUTIVE DIRECTIVE" if msg["role"] == "user" else "SCRIBE RESPONSE"
-                st.markdown(f"**{role_label}:**")
-                st.markdown(msg["content"])
-                st.markdown("---")
-
-# ==============================
-# RIGHT PANE: Evidentiary Annex
-# ==============================
-with right_pane:
-    st.markdown("### Evidentiary Annex")
-    st.markdown("<hr style='border-top: 2px solid #0B6623; margin-top: 0px;'/>", unsafe_allow_html=True)
+with col2:
+    st.markdown('<h3 class="annex-title">Evidentiary Annex</h3>', unsafe_allow_html=True)
     
-    if st.session_state.telemetry and st.session_state.telemetry.get("chunks"):
-        # ACTIVE STATE: Real-time execution trace
-        trace_logs = st.session_state.telemetry.get("trace_logs", [])
-        active_logs_html = "<div class='log-container'>"
-        for l in trace_logs:
-            active_logs_html += f"<div class='log-entry'><span class='status-dot {l['dot']}'></span> <strong>{l['time']}:</strong> {l['msg']}</div>"
-        active_logs_html += "</div>"
+    if not st.session_state.telemetry:
+        st.markdown(f"""
+        <div class="status-box">
+            <span class="status-label">System Status:</span>
+            <span class="status-text">Submit an inquiry directive to view archive retrieval logs and source evidence.</span>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        # Trace logs
+        for log in st.session_state.telemetry["trace_logs"]:
+            st.markdown(f'<div style="font-size:0.8rem; padding: 3px 0;"><span style="color:{log["dot"]};">●</span> <strong>{log["time"]}:</strong> {log["msg"]}</div>', unsafe_allow_html=True)
         
-        st.markdown(active_logs_html, unsafe_allow_html=True)
-        st.markdown("<br/>", unsafe_allow_html=True)
-        
-        # Section 1: Retrieved Archives
-        st.markdown("#### Retrieved Archives")
-        
-        for idx, chunk in enumerate(st.session_state.telemetry["chunks"]):
-            cid = chunk.get("chunk_id")
-            source = chunk.get("source")
-            scores = st.session_state.telemetry["scores"].get(cid, {})
-            final_score = scores.get("final_score", 0)
+        st.write("")
+        # Archive Accordions
+        st.markdown("<h4>Retrieved Archives</h4>", unsafe_allow_html=True)
+        for i, chunk in enumerate(st.session_state.telemetry["chunks"]):
+            score_data = st.session_state.telemetry["scores"].get(chunk['chunk_id'], {})
+            score_val = score_data.get("rrf", 0.0) if isinstance(score_data, dict) else float(score_data)
+            score_str = f"{score_val:.2f}"
             
-            # Creating a professional label for the accordion
-            label = f"[{idx+1}] {source} (Score: {final_score:.2f})"
-            
-            with st.expander(label):
+            with st.expander(f"Archive {i+1}: {chunk['source']}", expanded=(i==0)):
                 st.markdown(f"""
-                <div style='padding: 10px; border-left: 4px solid var(--color-forest-green); background-color: var(--color-cream);'>
-                    <div style='color: var(--color-grey-text); font-size: 0.9rem; line-height: 1.6;'>
-                        {chunk.get('text')}
+                <div class="archive-card">
+                    <span class="archive-doc-num">Document {i+1}:</span>
+                    <div class="archive-source-line">
+                        <span class="archive-source-name">{chunk['source']}</span>
+                        <span class="score-badge">Score: {score_str}</span>
+                    </div>
+                    <div class="archive-content">
+                        {chunk['text']}
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
-            
-        # Section 2: Telemetry (Prompt)
-        st.markdown("<br/>", unsafe_allow_html=True)
-        with st.expander("View LLM Payload"):
+
+        st.write("")
+        with st.expander("🔍 View LLM Inquiry Payload"):
             st.code(st.session_state.telemetry["prompt"], language="markdown")
-            
-    else:
-        # STANDBY STATE: Clean, simple, no confusing logs.
-        standby_html = """
-        <div class="info-box">
-            <strong style="color: #D32F2F;">System Status:</strong> 
-            <br> Submit an inquiry directive to view archive retrieval logs and source evidence.
-        </div>
-        """
-        st.markdown(standby_html, unsafe_allow_html=True)
