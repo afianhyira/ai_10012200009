@@ -2,7 +2,6 @@ import os
 import cohere
 import numpy as np
 from typing import List
-import streamlit as st
 from dotenv import load_dotenv
 
 class Embedder:
@@ -12,18 +11,11 @@ class Embedder:
         """
         load_dotenv()
         
-        # Fallback to environment variables (local/Render)
+        # Load from environment variables (local .env or Render)
         self.api_key = os.getenv("COHERE_API_KEY")
         
-        # Try Streamlit secrets if not found in env
         if not self.api_key:
-            try:
-                self.api_key = st.secrets.get("COHERE_API_KEY")
-            except Exception:
-                pass
-        
-        if not self.api_key:
-            raise ValueError("COHERE_API_KEY not found. Please set it in .env or st.secrets.")
+            raise ValueError("COHERE_API_KEY not found. Please set it in your .env file or environment variables.")
             
         self.client = cohere.Client(api_key=self.api_key)
         self.model_name = model_name
