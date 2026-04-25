@@ -106,7 +106,8 @@ with st.status("Accessing Executive Archives...", expanded=False) as status:
 col1, col2 = st.columns([2.5, 1], gap="large")
 
 with col1:
-    st.markdown("### Enter Inquiry Directive...")
+    st.markdown('<h3 style="color: forestgreen; margin-bottom: 0;">Enter Inquiry Directive...</h3>', unsafe_allow_html=True)
+    st.markdown('<p style="font-size: 1.1rem; color: #6B7280; margin-bottom: 1rem;">I am an AI Assistant to help you out.</p>', unsafe_allow_html=True)
     st.markdown('<div class="executive-card">', unsafe_allow_html=True)
     
     sug_col1, sug_col2, sug_col3 = st.columns(3)
