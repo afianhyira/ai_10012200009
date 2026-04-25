@@ -15,8 +15,6 @@ ENV/
 # RAG & Data Artifacts
 # We ignore the generated index and outputs to keep the repo lightweight
 outputs/
-data/*.index
-data/*_chunks.json
 *.log
 
 # Streamlit
