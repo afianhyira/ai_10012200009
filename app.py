@@ -292,7 +292,7 @@ with col2:
         st.markdown("<h4>Retrieved Archives</h4>", unsafe_allow_html=True)
         for i, chunk in enumerate(st.session_state.telemetry["chunks"]):
             score_data = st.session_state.telemetry["scores"].get(chunk['chunk_id'], {})
-            score_val = score_data.get("rrf", 0.0) if isinstance(score_data, dict) else float(score_data)
+            score_val = score_data.get("final_score", 0.0) if isinstance(score_data, dict) else float(score_data)
             score_str = f"{score_val:.2f}"
             
             with st.expander(f"Archive {i+1}: {chunk['source']}", expanded=(i==0)):
