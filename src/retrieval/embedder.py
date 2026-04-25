@@ -12,15 +12,15 @@ class Embedder:
         """
         load_dotenv()
         
-        # Try Streamlit secrets first (Cloud)
-        try:
-            self.api_key = st.secrets.get("COHERE_API_KEY")
-        except Exception:
-            self.api_key = None
-            
-        # Fallback to environment variables (local)
+        # Fallback to environment variables (local/Render)
+        self.api_key = os.getenv("COHERE_API_KEY")
+        
+        # Try Streamlit secrets if not found in env
         if not self.api_key:
-            self.api_key = os.getenv("COHERE_API_KEY")
+            try:
+                self.api_key = st.secrets.get("COHERE_API_KEY")
+            except Exception:
+                pass
         
         if not self.api_key:
             raise ValueError("COHERE_API_KEY not found. Please set it in .env or st.secrets.")

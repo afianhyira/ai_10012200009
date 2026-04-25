@@ -58,10 +58,10 @@ div[data-testid="stButton"] button {{ background-color: {primary_green} !importa
 st.markdown(custom_css, unsafe_allow_html=True)
 
 # --- 4. TOP BANNER ---
-t_col, _ = st.columns([1, 9])
+_, t_col = st.columns([9, 1])
 with t_col:
-    st.markdown('<div style="margin-top: -3.5rem; position: relative; z-index: 999;">', unsafe_allow_html=True)
-    mode = st.toggle("Dark Mode", value=(st.session_state.theme == "Dark"))
+    st.markdown('<div style="margin-top: -3.5rem; position: relative; z-index: 999; display: flex; justify-content: flex-end;">', unsafe_allow_html=True)
+    mode = st.toggle("🌓", value=(st.session_state.theme == "Dark"))
     st.markdown('</div>', unsafe_allow_html=True)
     if mode != (st.session_state.theme == "Dark"):
         st.session_state.theme = "Dark" if mode else "Light"
@@ -95,6 +95,14 @@ if "chat_history" not in st.session_state: st.session_state.chat_history = []
 if "suggestion_text" not in st.session_state: st.session_state.suggestion_text = ""
 
 with st.status("Accessing Executive Archives...", expanded=False) as status:
+    st.markdown("""
+    **The Civic Scribe** is a Retrieval-Augmented Generation (RAG) system built for the Executive Branch of Ghana.
+    
+    **How it works:**
+    1. **Data Ingestion:** Archives (Budget Statements, Election Results) are processed and chunked.
+    2. **Hybrid Retrieval:** Uses a combination of Vector Search (semantic meaning) and BM25 (exact keyword matching) to find relevant archives.
+    3. **Executive Generation:** An AI assistant formulates a precise briefing based strictly on the retrieved context.
+    """)
     try:
         pipeline = load_rag_pipeline()
         status.update(label="Intelligence Systems Online", state="complete", expanded=False)
