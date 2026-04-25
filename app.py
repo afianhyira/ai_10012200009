@@ -10,7 +10,7 @@ st.set_page_config(page_title="The Civic Scribe", layout="wide")
 
 # --- 2. THEME STATE ---
 if "theme" not in st.session_state:
-    st.session_state.theme = "Light"
+    st.session_state.theme = "Dark"
 
 # --- 3. DYNAMIC DESIGN SYSTEM ---
 primary_green = "#107C41"
@@ -64,12 +64,6 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-_, t_col = st.columns([9, 1])
-with t_col:
-    mode = st.toggle("🌓", value=(st.session_state.theme == "Dark"))
-    if mode != (st.session_state.theme == "Dark"):
-        st.session_state.theme = "Dark" if mode else "Light"
-        st.rerun()
 
 # --- 5. INITIALIZATION WITH CACHING ---
 @st.cache_resource
