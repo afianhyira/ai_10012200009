@@ -6,7 +6,7 @@ from datetime import datetime
 from src.pipeline.rag_pipeline import RAGPipeline
 
 # --- 1. PAGE CONFIGURATION ---
-st.set_page_config(page_title="The Civic Scribe | Executive Archive", layout="wide")
+st.set_page_config(page_title="The Civic Scribe", layout="wide")
 
 # --- 2. THEME STATE ---
 if "theme" not in st.session_state:
@@ -118,7 +118,7 @@ with col1:
     
     # Initial Greeting and Suggestions (Only show if chat is empty)
     if not st.session_state.chat_history:
-        with st.chat_message("assistant", avatar="🛡️"):
+        with st.chat_message("assistant"):
             st.markdown("Welcome to the **Civic Scribe**. I am an AI Assistant to help you out. Enter your directive below, or choose a suggestion to get started.")
             
         st.markdown('<div class="executive-card">', unsafe_allow_html=True)
@@ -166,7 +166,7 @@ with col1:
 with col2:
     st.markdown('<h3 class="annex-title">Evidentiary Annex</h3>', unsafe_allow_html=True)
     
-    if st.button("🗑️ Clear History", use_container_width=True):
+    if st.button("Clear History", use_container_width=True):
         st.session_state.chat_history = []
         st.session_state.active_briefing = None
         st.session_state.telemetry = None
