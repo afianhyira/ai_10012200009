@@ -59,7 +59,7 @@ st.markdown(custom_css, unsafe_allow_html=True)
 
 st.markdown(f"""
 <div class="top-bar-container">
-    <h1 class="top-bar-title">THE CIVIC SCRIBE | Executive Archive</h1>
+    <h1 class="top-bar-title">THE CIVIC SCRIBE</h1>
     <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Coat_of_arms_of_Ghana.svg/500px-Coat_of_arms_of_Ghana.svg.png" class="coat-of-arms">
 </div>
 """, unsafe_allow_html=True)
