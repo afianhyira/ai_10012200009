@@ -1,5 +1,7 @@
 streamlit
 sentence-transformers
+torch
+torchvision
 faiss-cpu
 rank-bm25
 pandas
