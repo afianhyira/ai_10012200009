@@ -108,53 +108,56 @@ col1, col2 = st.columns([2.5, 1], gap="large")
 with col1:
     st.markdown('<h3 style="color: forestgreen; margin-bottom: 0;">Enter Inquiry Directive...</h3>', unsafe_allow_html=True)
     st.markdown('<p style="font-size: 1.1rem; color: #6B7280; margin-bottom: 1rem;">I am an AI Assistant to help you out.</p>', unsafe_allow_html=True)
+    
+    # Display chat history
+    for message in st.session_state.chat_history:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
     st.markdown('<div class="executive-card">', unsafe_allow_html=True)
     
     sug_col1, sug_col2, sug_col3 = st.columns(3)
+    process_query = None
+    
     with sug_col1:
         if st.button("📄 2025 Education Budget", use_container_width=True):
-            st.session_state.suggestion_text = "Summarize the 2025 education budget."
-            st.rerun()
+            process_query = "Summarize the 2025 education budget."
     with sug_col2:
         if st.button("🇬🇭 2020 Election Results", use_container_width=True):
-            st.session_state.suggestion_text = "Show 2020 election results by region."
-            st.rerun()
+            process_query = "Show 2020 election results by region."
     with sug_col3:
         if st.button("⚙️ Infrastructure Projects", use_container_width=True):
-            st.session_state.suggestion_text = "Key 2025 infrastructure projects."
-            st.rerun()
+            process_query = "Key 2025 infrastructure projects."
             
-    query = st.text_input("Directive", value=st.session_state.suggestion_text, placeholder="Ask me anything", label_visibility="collapsed")
-    
-    if st.button("Process Executive Directive", use_container_width=True):
-        if query:
-            with st.status("Fetching Executive Data...", expanded=True) as status:
-                now = datetime.now().strftime("%I:%M %p")
-                current_logs = [{"dot": "#10B981", "time": now, "msg": "Secure server connection established."}]
-                chunks, scores, final_prompt, stream_gen = pipeline.query_stream(query, top_k=4, chat_history=st.session_state.chat_history)
-                current_logs.append({"dot": "#3B82F6", "time": now, "msg": "Scanning national archives..."})
-                full_response = st.write_stream(stream_gen)
-                status.update(label="Inquiry Processed", state="complete", expanded=False)
-
-            st.session_state.active_briefing = {"query": query, "response": full_response}
-            st.session_state.chat_history.append({"role": "user", "content": query})
-            st.session_state.chat_history.append({"role": "assistant", "content": full_response})
-            st.session_state.telemetry = {"chunks": chunks, "scores": scores, "prompt": final_prompt, "trace_logs": current_logs}
-            st.rerun()
-
-    if st.button("New Directive", use_container_width=False):
-        st.session_state.suggestion_text = ""
+    if st.button("Clear History", use_container_width=False):
         st.session_state.chat_history = []
         st.session_state.active_briefing = None
         st.session_state.telemetry = None
         st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
+    
+    if prompt := st.chat_input("Ask me anything..."):
+        process_query = prompt
 
-    if st.session_state.active_briefing:
-        st.markdown('<div class="executive-card">', unsafe_allow_html=True)
-        st.markdown("## Latest Briefing Report")
-        st.markdown(st.session_state.active_briefing['response'])
-        st.markdown('</div>', unsafe_allow_html=True)
+    if process_query:
+        st.session_state.chat_history.append({"role": "user", "content": process_query})
+        with st.chat_message("user"):
+            st.markdown(process_query)
+            
+        with st.chat_message("assistant"):
+            with st.status("Fetching Executive Data...", expanded=True) as status:
+                now = datetime.now().strftime("%I:%M %p")
+                current_logs = [{"dot": "#10B981", "time": now, "msg": "Secure server connection established."}]
+                chunks, scores, final_prompt, stream_gen = pipeline.query_stream(process_query, top_k=4, chat_history=st.session_state.chat_history[:-1])
+                current_logs.append({"dot": "#3B82F6", "time": now, "msg": "Scanning national archives..."})
+                status.update(label="Inquiry Processed", state="complete", expanded=False)
+            
+            full_response = st.write_stream(stream_gen)
+
+        st.session_state.active_briefing = {"query": process_query, "response": full_response}
+        st.session_state.chat_history.append({"role": "assistant", "content": full_response})
+        st.session_state.telemetry = {"chunks": chunks, "scores": scores, "prompt": final_prompt, "trace_logs": current_logs}
+        st.rerun()
 
 with col2:
     st.markdown('<h3 class="annex-title">Evidentiary Annex</h3>', unsafe_allow_html=True)
