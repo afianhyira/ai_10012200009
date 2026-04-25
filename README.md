@@ -1,6 +1,6 @@
 # CS4241: Introduction to AI - Final Project (2026)
 **Project Title:** The Civic Scribe - Executive RAG Dashboard  
-**Author:** [Your Name / Index Number]
+**Author:** Acsah Nhyira Okla / 10012200009
 
 ## 1. Project Overview
 The Civic Scribe is a professional-grade RAG application designed to assist the Executive Branch of the Republic of Ghana in analyzing national archives, specifically the 2025 Budget Statement and historical Election Results.
@@ -33,6 +33,6 @@ The Civic Scribe is a professional-grade RAG application designed to assist the 
 4. Run the app: `streamlit run app.py`
 
 ## 6. Submission Links
-- **GitHub Repository:** [Insert your Link here]
-- **Deployed URL:** [Insert your URL here]
-- **Video Walkthrough:** [Insert your Link here]
+- **GitHub Repository:** [](https://github.com/afianhyira/ai_10012200009)]
+- **Deployed URL:** [(https://ai-10012200009-2.onrender.com/)]
+- **Video Walkthrough:** [(https://drive.google.com/drive/folders/1SD4DPe3Ry2NZqBs5IsIkEzE4p42HkBfF?usp=drive_link)]
