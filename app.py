@@ -114,45 +114,41 @@ with st.status("Accessing Executive Archives...", expanded=False) as status:
 col1, col2 = st.columns([2.5, 1], gap="large")
 
 with col1:
-    st.markdown('<h3 style="color: forestgreen; margin-bottom: 0;">Enter Inquiry Directive...</h3>', unsafe_allow_html=True)
-    st.markdown('<p style="font-size: 1.1rem; color: #6B7280; margin-bottom: 1rem;">I am an AI Assistant to help you out.</p>', unsafe_allow_html=True)
-    
-    # Display chat history
-    for message in st.session_state.chat_history:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
-
-    st.markdown('<div class="executive-card">', unsafe_allow_html=True)
-    
-    sug_col1, sug_col2, sug_col3 = st.columns(3)
     process_query = None
     
-    with sug_col1:
-        if st.button("📄 2025 Education Budget", use_container_width=True):
-            process_query = "Summarize the 2025 education budget."
-    with sug_col2:
-        if st.button("🇬🇭 2020 Election Results", use_container_width=True):
-            process_query = "Show 2020 election results by region."
-    with sug_col3:
-        if st.button("⚙️ Infrastructure Projects", use_container_width=True):
-            process_query = "Key 2025 infrastructure projects."
+    # Initial Greeting and Suggestions (Only show if chat is empty)
+    if not st.session_state.chat_history:
+        with st.chat_message("assistant", avatar="🛡️"):
+            st.markdown("Welcome to the **Civic Scribe**. I am an AI Assistant to help you out. Enter your directive below, or choose a suggestion to get started.")
             
-    if st.button("Clear History", use_container_width=False):
-        st.session_state.chat_history = []
-        st.session_state.active_briefing = None
-        st.session_state.telemetry = None
-        st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown('<div class="executive-card">', unsafe_allow_html=True)
+        sug_col1, sug_col2, sug_col3 = st.columns(3)
+        with sug_col1:
+            if st.button("📄 2025 Education Budget", use_container_width=True):
+                process_query = "Summarize the 2025 education budget."
+        with sug_col2:
+            if st.button("🇬🇭 2020 Election Results", use_container_width=True):
+                process_query = "Show 2020 election results by region."
+        with sug_col3:
+            if st.button("⚙️ Infrastructure Projects", use_container_width=True):
+                process_query = "Key 2025 infrastructure projects."
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    # Display chat history with custom avatars
+    for message in st.session_state.chat_history:
+        avatar = "👤" if message["role"] == "user" else "🛡️"
+        with st.chat_message(message["role"], avatar=avatar):
+            st.markdown(message["content"])
     
     if prompt := st.chat_input("Ask me anything..."):
         process_query = prompt
 
     if process_query:
         st.session_state.chat_history.append({"role": "user", "content": process_query})
-        with st.chat_message("user"):
+        with st.chat_message("user", avatar="👤"):
             st.markdown(process_query)
             
-        with st.chat_message("assistant"):
+        with st.chat_message("assistant", avatar="🛡️"):
             with st.status("Fetching Executive Data...", expanded=True) as status:
                 now = datetime.now().strftime("%I:%M %p")
                 current_logs = [{"dot": "#10B981", "time": now, "msg": "Secure server connection established."}]
@@ -170,6 +166,12 @@ with col1:
 with col2:
     st.markdown('<h3 class="annex-title">Evidentiary Annex</h3>', unsafe_allow_html=True)
     
+    if st.button("🗑️ Clear History", use_container_width=True):
+        st.session_state.chat_history = []
+        st.session_state.active_briefing = None
+        st.session_state.telemetry = None
+        st.rerun()
+        
     if not st.session_state.telemetry:
         st.markdown('<div class="status-box"><span class="status-text">Submit an inquiry directive to view archive retrieval logs and source evidence.</span></div>', unsafe_allow_html=True)
     else:
