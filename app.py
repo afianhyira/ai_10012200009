@@ -57,22 +57,19 @@ div[data-testid="stButton"] button {{ background-color: {primary_green} !importa
 """
 st.markdown(custom_css, unsafe_allow_html=True)
 
-# --- 4. TOP BANNER ---
-_, t_col = st.columns([9, 1])
-with t_col:
-    st.markdown('<div style="margin-top: -3.5rem; position: relative; z-index: 999; display: flex; justify-content: flex-end;">', unsafe_allow_html=True)
-    mode = st.toggle("🌓", value=(st.session_state.theme == "Dark"))
-    st.markdown('</div>', unsafe_allow_html=True)
-    if mode != (st.session_state.theme == "Dark"):
-        st.session_state.theme = "Dark" if mode else "Light"
-        st.rerun()
-
 st.markdown(f"""
 <div class="top-bar-container">
     <h1 class="top-bar-title">THE CIVIC SCRIBE | Executive Archive</h1>
     <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Coat_of_arms_of_Ghana.svg/500px-Coat_of_arms_of_Ghana.svg.png" class="coat-of-arms">
 </div>
 """, unsafe_allow_html=True)
+
+_, t_col = st.columns([9, 1])
+with t_col:
+    mode = st.toggle("🌓", value=(st.session_state.theme == "Dark"))
+    if mode != (st.session_state.theme == "Dark"):
+        st.session_state.theme = "Dark" if mode else "Light"
+        st.rerun()
 
 # --- 5. INITIALIZATION WITH CACHING ---
 @st.cache_resource
