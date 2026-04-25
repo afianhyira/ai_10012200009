@@ -1,15 +1,17 @@
 import faiss
 import numpy as np
+import json
+import os
 from typing import List, Tuple
 
 class VectorStore:
-    def __init__(self, embedding_dim=384):
+    def __init__(self, embedding_dim=1024):
         """
-        Initialize FAISS index. all-MiniLM-L6-v2 produces 384-dimensional embeddings.
+        Initialize FAISS index. 
+        Note: Cohere embed-english-v3.0 produces 1024-dimensional embeddings.
         """
         self.embedding_dim = embedding_dim
-        # Using IndexFlatIP for Cosine Similarity (assuming embeddings are normalized)
-        # or IndexFlatL2 for L2 distance. We'll use L2 for simplicity and invert it for score.
+        # Using IndexFlatL2 for simplicity
         self.index = faiss.IndexFlatL2(embedding_dim)
         self.chunks = []
         
@@ -24,7 +26,6 @@ class VectorStore:
     def search(self, query_embedding: np.ndarray, top_k=5) -> List[Tuple[dict, float]]:
         """
         Search for top_k most similar chunks.
-        Returns a list of (chunk, score) tuples.
         """
         if self.index.ntotal == 0:
             return []
@@ -35,9 +36,37 @@ class VectorStore:
         results = []
         for dist, idx in zip(distances[0], indices[0]):
             if idx != -1 and idx < len(self.chunks):
-                # Convert L2 distance to a similarity score (lower dist = higher similarity)
-                # Max L2 distance could be around 4 for normalized vectors, so we can do 1 / (1 + dist)
                 sim_score = 1.0 / (1.0 + dist)
                 results.append((self.chunks[idx], sim_score))
                 
         return results
+
+    def save_to_disk(self, directory: str, filename_prefix: str = "vector_store"):
+        """Save FAISS index and chunks to disk."""
+        os.makedirs(directory, exist_ok=True)
+        
+        # Save FAISS index
+        index_path = os.path.join(directory, f"{filename_prefix}.index")
+        faiss.write_index(self.index, index_path)
+        
+        # Save chunks metadata
+        chunks_path = os.path.join(directory, f"{filename_prefix}_chunks.json")
+        with open(chunks_path, "w", encoding="utf-8") as f:
+            json.dump(self.chunks, f, indent=4)
+            
+        print(f"Index and chunks saved to {directory}")
+
+    def load_from_disk(self, directory: str, filename_prefix: str = "vector_store"):
+        """Load FAISS index and chunks from disk."""
+        index_path = os.path.join(directory, f"{filename_prefix}.index")
+        chunks_path = os.path.join(directory, f"{filename_prefix}_chunks.json")
+        
+        if not os.path.exists(index_path) or not os.path.exists(chunks_path):
+            raise FileNotFoundError(f"Index files not found in {directory}")
+            
+        self.index = faiss.read_index(index_path)
+        with open(chunks_path, "r", encoding="utf-8") as f:
+            self.chunks = json.load(f)
+            
+        self.embedding_dim = self.index.d
+        print(f"Loaded {len(self.chunks)} chunks from disk.")
