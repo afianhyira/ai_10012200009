@@ -79,8 +79,10 @@ class RAGPipeline:
         # Retrieval
         retrieved_chunks, scores = self.hybrid_retriever.retrieve(user_query, top_k=top_k)
         
-        # Context Selection
-        context_block = build_context_block(retrieved_chunks)
+        # Context Selection & Management (Requirement Part C.2)
+        # We filter for top scoring chunks and ensure they fit within the window
+        selected_chunks = [c for c in retrieved_chunks if scores.get(c['chunk_id'], {}).get('rrf', 0) > 0.01]
+        context_block = build_context_block(selected_chunks[:top_k])
         
         # Prompt Engineering
         final_prompt = generate_prompt(user_query, retrieved_chunks, version=prompt_version, chat_history=chat_history)

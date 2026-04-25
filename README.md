@@ -22,6 +22,8 @@ The Civic Scribe is a professional-grade RAG application designed to assist the 
 - **Architecture Diagram:** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - **Manual Experiment Logs:** [docs/EXPERIMENT_LOGS.md](docs/EXPERIMENT_LOGS.md)
 - **Adversarial Testing:** [docs/ADVERSARIAL_TESTS.md](docs/ADVERSARIAL_TESTS.md)
+- **Failure Case Demonstration:** See `src/evaluation/failure_case_demonstration.py`
+- **Adversarial Query Evaluation:** See `src/evaluation/adversarial_tests.py`
 - **Data Engineering Justification:** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#4-design-justification)
 
 ## 5. Local Setup

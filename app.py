@@ -223,6 +223,7 @@ with col1:
         st.markdown("### Enter Inquiry Directive...")
 
     st.markdown('<div class="executive-card">', unsafe_allow_html=True)
+    st.markdown('<p style="font-style: italic; color: #6B7280; margin-bottom: 1rem; text-align: center;">I am AI Chatbot to help you out</p>', unsafe_allow_html=True)
     sug_col1, sug_col2, sug_col3 = st.columns(3)
     with sug_col1:
         if st.button("📄 2025 Education Budget", use_container_width=True):
